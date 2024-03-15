@@ -1,0 +1,11 @@
+bitarray==2.9.2
+chardet==5.2.0
+pathlib==1.0.1
+pdfreader==0.1.12
+pillow==10.2.0
+pycryptodome==3.20.0
+pypdf==4.1.0
+python-dateutil==2.9.0.post0
+reportlab==4.1.0
+six==1.16.0
+typing_extensions==4.10.0
