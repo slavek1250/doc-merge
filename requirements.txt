@@ -1,11 +1,16 @@
 bitarray==2.9.2
 chardet==5.2.0
+colorama==0.4.6
+doc2pdf==0.2.0
+docx2pdf==0.1.8
 pathlib==1.0.1
 pdfreader==0.1.12
 pillow==10.2.0
 pycryptodome==3.20.0
 pypdf==4.1.0
 python-dateutil==2.9.0.post0
+pywin32==306
 reportlab==4.1.0
 six==1.16.0
+tqdm==4.66.2
 typing_extensions==4.10.0
