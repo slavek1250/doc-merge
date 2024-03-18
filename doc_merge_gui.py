@@ -2,7 +2,18 @@ import sys
 import traceback
 from pathlib import Path
 from DocMerger.doc_merger import DocMerger, ProgressLogIf
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton, QTextEdit, QProgressBar, QFileDialog, QSpinBox, QMessageBox
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QTextEdit,
+    QProgressBar,
+    QFileDialog,
+    QSpinBox,
+    QMessageBox,
+)
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QColorConstants, QIcon
 
@@ -11,6 +22,7 @@ class DummyProgressLog(ProgressLogIf):
     def __init__(self):
         self._max = 0
         self._cnt = 0
+
 
 class DocMergeWorker(QThread, ProgressLogIf):
     progress_updated = pyqtSignal(int)
@@ -34,7 +46,7 @@ class DocMergeWorker(QThread, ProgressLogIf):
             ex_traceback = traceback.format_exc()
             self.error_occurred.emit(ex_type.__name__, str(ex_value), ex_traceback)
 
-    def init(self, max : int):
+    def init(self, max: int):
         self._progress_bar_max = max
         self._progress_bar_value = 0
         self.progress_updated.emit(0)
@@ -109,7 +121,9 @@ class DocMergeGui(QMainWindow, ProgressLogIf):
         self.input_dir_entry.setText(input_dir)
 
     def browse_output_file(self):
-        output_file, _ = QFileDialog.getSaveFileName(self, "Save Output PDF File", "", "PDF Files (*.pdf)")
+        output_file, _ = QFileDialog.getSaveFileName(
+            self, "Save Output PDF File", "", "PDF Files (*.pdf)"
+        )
         self.output_file_entry.setText(output_file)
 
     def start_conversion(self):
@@ -123,7 +137,9 @@ class DocMergeGui(QMainWindow, ProgressLogIf):
         # Add your conversion logic here
         self.worker_thread = DocMergeWorker(input_dir, output_file, align_value)
         self.worker_thread.progress_updated.connect(self.on_progress_update)
-        self.worker_thread.detailed_output_updated.connect(self.on_detailed_output_update)
+        self.worker_thread.detailed_output_updated.connect(
+            self.on_detailed_output_update
+        )
         self.worker_thread.finished.connect(self.on_finished)
         self.worker_thread.error_occurred.connect(self.on_error)
         self.worker_thread.start()
@@ -132,7 +148,6 @@ class DocMergeGui(QMainWindow, ProgressLogIf):
         self.progress_bar.setValue(0)
         self.detailed_output_text.clear()
         self.detailed_output_text.setTextColor(QColorConstants.Black)
-
 
     def on_progress_update(self, proc: int):
         self.progress_bar.setValue(proc)
@@ -148,6 +163,7 @@ class DocMergeGui(QMainWindow, ProgressLogIf):
         self.detailed_output_text.append(ex_traceback)
         self.detailed_output_text.setTextColor(QColorConstants.Black)
         QMessageBox.critical(self, "Error", f"{ex_type}: {ex_msg}")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
