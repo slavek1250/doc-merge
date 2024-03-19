@@ -1,3 +1,3 @@
-py -3 -m venv .env/pdf_merge
-source .env/pdf_merge/Scripts/activate.bat
+py -3 -m venv .env/doc_merge
+source .env/doc_merge/Scripts/activate.bat
 pip install -r requirements.txt

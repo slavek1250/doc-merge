@@ -1,3 +1,5 @@
+#!.env/doc_merge/Scripts/pythonw
+
 import sys
 import traceback
 from pathlib import Path
@@ -68,9 +70,9 @@ class DocMergeWorker(QThread, ProgressLogIf):
 class DocMergeGui(QMainWindow, ProgressLogIf):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Documents Merger")
+        self.setWindowTitle("Documents Merge Tool by Dominik Kała - v0.1.0")
         self.setGeometry(100, 100, 600, 400)
-        self.setWindowIcon(QIcon("icon.png"))
+        self.setWindowIcon(QIcon("icon.ico"))
 
         self.initUI()
 
