@@ -29,11 +29,11 @@ class DummyProgressLog(ProgressLogIf):
 class DocMergeWorker(QThread, ProgressLogIf):
     progress_updated = pyqtSignal(int)
     detailed_output_updated = pyqtSignal(str)
-    finished = pyqtSignal(str)
+    successfully_finished = pyqtSignal(str)
     error_occurred = pyqtSignal(str, str, str)
 
-    def __init__(self, input_dir: Path, output_file: Path, align: int) -> None:
-        super().__init__()
+    def __init__(self, parent, input_dir: Path, output_file: Path, align: int) -> None:
+        QThread.__init__(self, parent)
         self._input_dir = input_dir
         self._output_file = output_file
         self._align = align
@@ -58,10 +58,10 @@ class DocMergeWorker(QThread, ProgressLogIf):
         proc = int(round(self._progress_bar_value * 100 / self._progress_bar_max, 0))
         self.progress_updated.emit(proc)
 
-    def finish(self):
-        result = "Done! Thank you :)"
+    def finish(self, duration_s: float):
+        result = f"Done in {duration_s}s! Thank you :)"
         self.msg(result)
-        self.finished.emit(result)
+        self.successfully_finished.emit(result)
 
     def msg(self, msg):
         self.detailed_output_updated.emit(msg)
@@ -70,7 +70,8 @@ class DocMergeWorker(QThread, ProgressLogIf):
 class DocMergeGui(QMainWindow, ProgressLogIf):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Documents Merge Tool by Dominik Kała - v0.1.0")
+        self._window_title = "Documents Merge Tool by dkala - v0.1.0"
+        self.setWindowTitle(self._window_title)
         self.setGeometry(100, 100, 600, 400)
         self.setWindowIcon(QIcon("icon.ico"))
 
@@ -113,9 +114,9 @@ class DocMergeGui(QMainWindow, ProgressLogIf):
         self.detailed_output_text.setGeometry(20, 210, 550, 120)
 
         # Start conversion button
-        self.start_merge = QPushButton("Start", self)
-        self.start_merge.setGeometry(230, 350, 140, 30)
-        self.start_merge.clicked.connect(self.start_conversion)
+        self.start_merge_button = QPushButton("Start", self)
+        self.start_merge_button.setGeometry(230, 350, 140, 30)
+        self.start_merge_button.clicked.connect(self.on_start_merge)
         self.clear_results()
 
     def browse_input_dir(self):
@@ -128,7 +129,7 @@ class DocMergeGui(QMainWindow, ProgressLogIf):
         )
         self.output_file_entry.setText(output_file)
 
-    def start_conversion(self):
+    def on_start_merge(self):
         input_dir = Path(self.input_dir_entry.text())
         output_file = Path(self.output_file_entry.text())
         align_value = int(self.align_entry.text())
@@ -137,14 +138,16 @@ class DocMergeGui(QMainWindow, ProgressLogIf):
         self.clear_results()
 
         # Add your conversion logic here
-        self.worker_thread = DocMergeWorker(input_dir, output_file, align_value)
+        self.worker_thread = DocMergeWorker(self, input_dir, output_file, align_value)
         self.worker_thread.progress_updated.connect(self.on_progress_update)
         self.worker_thread.detailed_output_updated.connect(
             self.on_detailed_output_update
         )
-        self.worker_thread.finished.connect(self.on_finished)
+        self.worker_thread.successfully_finished.connect(self.on_successfully_finished)
         self.worker_thread.error_occurred.connect(self.on_error)
+        self.worker_thread.finished.connect(self.on_worker_finished)
         self.worker_thread.start()
+        self.start_merge_button.setEnabled(False)
 
     def clear_results(self):
         self.progress_bar.setValue(0)
@@ -153,11 +156,12 @@ class DocMergeGui(QMainWindow, ProgressLogIf):
 
     def on_progress_update(self, proc: int):
         self.progress_bar.setValue(proc)
+        self.setWindowTitle(f"{self._window_title} - Working {proc}%")
 
     def on_detailed_output_update(self, msg: str):
         self.detailed_output_text.append(msg)
 
-    def on_finished(self, msg: str):
+    def on_successfully_finished(self, msg: str):
         QMessageBox.information(self, "Finished", msg)
 
     def on_error(self, ex_type: str, ex_msg: str, ex_traceback: str):
@@ -166,6 +170,9 @@ class DocMergeGui(QMainWindow, ProgressLogIf):
         self.detailed_output_text.setTextColor(QColorConstants.Black)
         QMessageBox.critical(self, "Error", f"{ex_type}: {ex_msg}")
 
+    def on_worker_finished(self):
+        self.setWindowTitle(self._window_title)
+        self.start_merge_button.setEnabled(True)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

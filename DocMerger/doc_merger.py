@@ -3,9 +3,12 @@ from pathlib import Path
 from pdfreader import PDFDocument
 from pypdf import PdfWriter
 from reportlab.pdfgen import canvas
+from functools import partialmethod
+from tqdm import tqdm
 
 import docx2pdf
 import tempfile
+import time
 
 
 class Tools:
@@ -31,6 +34,8 @@ class Tools:
 
 
 class DocumentToPdfConverter:
+    def __init__(self):
+        tqdm.__init__ = partialmethod(tqdm.__init__, disable=True)
     def list_supported_files_in_dir(self, dir_path: Path) -> list[Path]:
         docxs_list = list(dir_path.glob("*.docx"))
         return docxs_list
@@ -45,7 +50,7 @@ class DocumentToPdfConverter:
 
 class ProgressLogIf:
     @abstractclassmethod
-    def init(self, max):
+    def init(self, max: int):
         pass
 
     @abstractclassmethod
@@ -53,7 +58,7 @@ class ProgressLogIf:
         pass
 
     @abstractclassmethod
-    def finish(self):
+    def finish(self, duration_s: float):
         pass
 
     @abstractclassmethod
@@ -75,8 +80,8 @@ class DummyProgressLog(ProgressLogIf):
         proc = round(self._cnt * 100 / self._max, 0)
         print(f"Progress: {proc}%")
 
-    def finish(self):
-        print("Done! Thank you :)")
+    def finish(self, duration_s: float):
+        print(f"Done in {duration_s}s! Thank you :)")
 
     def msg(self, msg):
         print(msg)
@@ -99,6 +104,7 @@ class DocMerger:
         self._clear_files_to_process()
 
     def execute(self):
+        start_time_s = time.monotonic()
         self._enumerate_files_to_process()
         self._init_progress_log()
 
@@ -109,7 +115,8 @@ class DocMerger:
         else:
             self._exec()
 
-        self._progress_log.finish()
+        duration_s = round(time.monotonic() - start_time_s, 3)
+        self._progress_log.finish(duration_s)
         self._clear_files_to_process()
 
     def _enumerate_files_to_process(self):
